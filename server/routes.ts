@@ -20,17 +20,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Construct prompt for Deepseek API to get structured response
-      const prompt = `Please provide a comprehensive answer to the following question and suggest related questions that people might also ask. Format your response as JSON with the following structure:
+      // Construct prompt for OpenRouter API to get structured response
+      const prompt = `Please provide a comprehensive answer to the following question and suggest related questions with their answers. Format your response as JSON with the following structure:
 
 {
   "direct_answer": "Your detailed answer here",
-  "people_also_ask": ["Related question 1", "Related question 2", "Related question 3", "Related question 4", "Related question 5"]
+  "people_also_ask": [
+    {
+      "question": "Related question 1",
+      "answer": "Brief answer to question 1"
+    },
+    {
+      "question": "Related question 2", 
+      "answer": "Brief answer to question 2"
+    },
+    {
+      "question": "Related question 3",
+      "answer": "Brief answer to question 3"
+    },
+    {
+      "question": "Related question 4",
+      "answer": "Brief answer to question 4"
+    },
+    {
+      "question": "Related question 5",
+      "answer": "Brief answer to question 5"
+    }
+  ]
 }
 
 Question: ${query}
 
-Please ensure the direct_answer is comprehensive and informative, and the people_also_ask contains 5 relevant follow-up questions.`;
+Please ensure the direct_answer is comprehensive and informative, and each item in people_also_ask contains a relevant follow-up question with a concise but informative answer.`;
 
       // Make request to OpenRouter API (which routes to DeepSeek)
       const deepseekResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -80,11 +101,26 @@ Please ensure the direct_answer is comprehensive and informative, and the people
           parsedResponse = {
             direct_answer: content,
             people_also_ask: [
-              "What are the key benefits of this topic?",
-              "How does this compare to alternatives?",
-              "What are the potential drawbacks?",
-              "What should beginners know about this?",
-              "What are the future trends in this area?"
+              {
+                question: "What are the key benefits of this topic?",
+                answer: "This topic offers several advantages that can be beneficial in various contexts."
+              },
+              {
+                question: "How does this compare to alternatives?",
+                answer: "Each approach has its own strengths and considerations to evaluate."
+              },
+              {
+                question: "What are the potential drawbacks?",
+                answer: "Like any topic, there are some limitations and challenges to be aware of."
+              },
+              {
+                question: "What should beginners know about this?",
+                answer: "Starting with the fundamentals and basic concepts is usually the best approach."
+              },
+              {
+                question: "What are the future trends in this area?",
+                answer: "This field continues to evolve with new developments and innovations."
+              }
             ]
           };
         }
@@ -94,11 +130,26 @@ Please ensure the direct_answer is comprehensive and informative, and the people
         parsedResponse = {
           direct_answer: content,
           people_also_ask: [
-            "What are the key benefits of this topic?",
-            "How does this compare to alternatives?",
-            "What are the potential drawbacks?",
-            "What should beginners know about this?",
-            "What are the future trends in this area?"
+            {
+              question: "What are the key benefits of this topic?",
+              answer: "This topic offers several advantages that can be beneficial in various contexts."
+            },
+            {
+              question: "How does this compare to alternatives?",
+              answer: "Each approach has its own strengths and considerations to evaluate."
+            },
+            {
+              question: "What are the potential drawbacks?",
+              answer: "Like any topic, there are some limitations and challenges to be aware of."
+            },
+            {
+              question: "What should beginners know about this?",
+              answer: "Starting with the fundamentals and basic concepts is usually the best approach."
+            },
+            {
+              question: "What are the future trends in this area?",
+              answer: "This field continues to evolve with new developments and innovations."
+            }
           ]
         };
       }
@@ -109,11 +160,26 @@ Please ensure the direct_answer is comprehensive and informative, and the people
       }
       if (!Array.isArray(parsedResponse.people_also_ask)) {
         parsedResponse.people_also_ask = [
-          "What are the key benefits of this topic?",
-          "How does this compare to alternatives?",
-          "What are the potential drawbacks?",
-          "What should beginners know about this?",
-          "What are the future trends in this area?"
+          {
+            question: "What are the key benefits of this topic?",
+            answer: "This topic offers several advantages that can be beneficial in various contexts."
+          },
+          {
+            question: "How does this compare to alternatives?",
+            answer: "Each approach has its own strengths and considerations to evaluate."
+          },
+          {
+            question: "What are the potential drawbacks?",
+            answer: "Like any topic, there are some limitations and challenges to be aware of."
+          },
+          {
+            question: "What should beginners know about this?",
+            answer: "Starting with the fundamentals and basic concepts is usually the best approach."
+          },
+          {
+            question: "What are the future trends in this area?",
+            answer: "This field continues to evolve with new developments and innovations."
+          }
         ];
       }
 

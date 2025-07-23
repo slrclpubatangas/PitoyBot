@@ -6,13 +6,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Search, Lightbulb, Users, Brain, Shield, FileText, HelpCircle, TriangleAlert, RotateCcw } from "lucide-react";
+import { Search, Lightbulb, Users, Brain, Shield, FileText, HelpCircle, TriangleAlert, RotateCcw, ChevronDown, ChevronUp } from "lucide-react";
 import type { SearchRequest, SearchResponse } from "@shared/schema";
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [expandedQuestions, setExpandedQuestions] = useState<Set<number>>(new Set());
   const { toast } = useToast();
 
   const searchMutation = useMutation({
@@ -23,6 +24,7 @@ export default function Home() {
     onSuccess: (data) => {
       setSearchResults(data);
       setError(null);
+      setExpandedQuestions(new Set()); // Reset expanded questions for new search
     },
     onError: (err) => {
       setError(err.message || "Failed to get search results. Please try again.");
@@ -44,6 +46,16 @@ export default function Home() {
 
   const handleQuestionClick = (question: string) => {
     setSearchQuery(question);
+  };
+
+  const toggleQuestionExpansion = (index: number) => {
+    const newExpanded = new Set(expandedQuestions);
+    if (newExpanded.has(index)) {
+      newExpanded.delete(index);
+    } else {
+      newExpanded.add(index);
+    }
+    setExpandedQuestions(newExpanded);
   };
 
   const retrySearch = () => {
@@ -217,29 +229,59 @@ export default function Home() {
                     </div>
                     
                     <div className="space-y-3">
-                      {searchResults.people_also_ask.map((question, index) => (
-                        <div 
-                          key={index}
-                          onClick={() => handleQuestionClick(question)}
-                          className="group cursor-pointer rounded-lg p-4 transition-all duration-200 border border-gray-600 hover:border-gray-500"
-                          style={{ backgroundColor: "var(--dark-surface-2)" }}
-                        >
-                          <div className="flex items-center justify-between">
-                            <p className="font-medium group-hover:text-white" style={{ color: "var(--text-primary)" }}>
-                              {question}
-                            </p>
-                            <div className="text-gray-400 group-hover:text-blue-500 transition-all duration-200">
-                              →
+                      {searchResults.people_also_ask.map((item, index) => {
+                        const isExpanded = expandedQuestions.has(index);
+                        return (
+                          <div 
+                            key={index}
+                            className="rounded-lg border border-gray-600 transition-all duration-200"
+                            style={{ backgroundColor: "var(--dark-surface-2)" }}
+                          >
+                            {/* Question Header */}
+                            <div 
+                              onClick={() => toggleQuestionExpansion(index)}
+                              className="group cursor-pointer p-4 flex items-center justify-between hover:bg-opacity-80"
+                            >
+                              <p className="font-medium group-hover:text-white flex-1 pr-4" style={{ color: "var(--text-primary)" }}>
+                                {item.question}
+                              </p>
+                              <div className="flex items-center space-x-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleQuestionClick(item.question);
+                                  }}
+                                  className="text-xs px-2 py-1 h-auto text-blue-400 hover:text-blue-300 hover:bg-blue-900/20"
+                                >
+                                  Search
+                                </Button>
+                                <div className="text-gray-400 group-hover:text-blue-500 transition-all duration-200">
+                                  {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                                </div>
+                              </div>
                             </div>
+                            
+                            {/* Expandable Answer */}
+                            {isExpanded && (
+                              <div className="px-4 pb-4 border-t border-gray-700">
+                                <div className="pt-4 rounded-lg p-4" style={{ backgroundColor: "var(--dark-bg)" }}>
+                                  <p className="leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                                    {item.answer}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                     
                     <div className="mt-6 pt-4 border-t border-gray-600">
                       <p className="text-sm flex items-center" style={{ color: "var(--text-secondary)" }}>
                         <HelpCircle className="mr-2 w-4 h-4" />
-                        Click on any question to explore it further
+                        Click the arrow to expand answers, or "Search" to explore further
                       </p>
                     </div>
                   </CardContent>
