@@ -1,0 +1,133 @@
+Project Goal:
+Create a full-stack web application using Node.js and Express. This application will serve a simple frontend that allows a user to enter a search query. The query will be sent to our backend, which will then securely call the Deepseek API to get a "Direct Answer" and a "People Also Ask" section, displaying the results back to the user.
+
+Key Features:
+
+A clean HTML frontend with a text input field and a submit button.
+
+A loading indicator that displays while waiting for the API response.
+
+A Node.js/Express backend to serve the frontend and handle API calls.
+
+A single API endpoint on our server that acts as a secure proxy to the Deepseek API.
+
+Dynamic display of the results on the frontend without a page reload.
+
+Securely use an API key stored in Replit Secrets.
+
+Technology Stack:
+
+Frontend: HTML, CSS, JavaScript (using fetch)
+
+Backend: Node.js, Express.js
+
+API Communication: node-fetch
+
+Step-by-Step Implementation Plan:
+
+Step 1: Create the Project Files
+Please create the following empty files in the root directory:
+
+index.html
+
+style.css
+
+script.js
+
+server.js
+
+Step 2: Write the Frontend HTML (index.html)
+Create the basic structure for our web app. It should include:
+
+A link to style.css and script.js.
+
+A main container.
+
+A title: "AI Search Assistant".
+
+A form with an ID search-form, containing a text input with ID search-input and a submit button with ID search-button.
+
+A loading spinner element (e.g., a div with ID loader) that is hidden by default.
+
+Two empty div containers for the results: one with ID results-container.
+
+Step 3: Write the CSS (style.css)
+Apply clean, modern styling.
+
+Use a dark theme with a sans-serif font for the body.
+
+Center the main container on the page.
+
+Style the form input and button to be large and user-friendly.
+
+Create styles for the loading spinner.
+
+Create a .hidden class (display: none;) to toggle visibility of the loader.
+
+Style the results area with clear headings for the "Direct Answer" and "People Also Ask" sections.
+
+Step 4: Set up the Backend Server (server.js)
+Set up a basic Express server.
+
+Import express and node-fetch.
+
+Initialize an Express app.
+
+Use express.json() middleware to parse JSON bodies.
+
+Use express.static('.') to serve the frontend files (index.html, style.css, script.js) from the root directory.
+
+Define the port to listen on (e.g., 3000) and start the server.
+
+Step 5: Create the Backend API Endpoint (in server.js)
+This is the most important part. Create a POST endpoint at /api/search. This endpoint must:
+
+Receive the query from the request body.
+
+Securely get the Deepseek API key from Replit Secrets. The secret key name should be DEEPSEEK_API_KEY.
+
+Construct the prompt payload for the Deepseek API. Use the JSON output variation of the prompt we designed earlier to make parsing easy.
+
+Make a fetch call to the Deepseek API endpoint (https://api.deepseek.com/chat/completions).
+
+Include the necessary headers: Content-Type: application/json and Authorization: Bearer [YOUR_API_KEY].
+
+Parse the JSON response from the Deepseek API.
+
+Extract the direct_answer and people_also_ask fields from the AI's response.
+
+Send this extracted data back to our frontend as a JSON response.
+
+Include try...catch blocks for robust error handling. If the API call fails, send a 500 status code with an error message.
+
+Step 6: Write the Frontend JavaScript (script.js)
+This script will handle user interaction and communication with our backend.
+
+Get references to the form, input field, loader, and results container.
+
+Add a 'submit' event listener to the form.
+
+Inside the listener, prevent the default form submission.
+
+Get the user's query from the input field. If it's empty, do nothing.
+
+Show the loading spinner and clear any previous results.
+
+Make a fetch call to our own backend endpoint (/api/search) using the POST method. Pass the user's query in the body as a JSON object: { "query": userQuery }.
+
+When the response is received:
+
+Hide the loading spinner.
+
+Parse the JSON response from our server.
+
+Dynamically create and append HTML elements to display the "Direct Answer" and the list of "People Also Ask" questions inside the results-container.
+
+Include error handling for the fetch call to display a message to the user if something goes wrong.
+
+Step 7: Final Instructions & Dependencies
+After generating the code, please remind me to:
+
+Install the necessary npm packages by running npm install express node-fetch in the Shell.
+
+Add my Deepseek API key to the Replit Secrets tool with the key name DEEPSEEK_API_KEY.
