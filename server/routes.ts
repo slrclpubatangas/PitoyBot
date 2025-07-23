@@ -1,0 +1,130 @@
+import type { Express } from "express";
+import { createServer, type Server } from "http";
+import { searchRequestSchema, type SearchResponse } from "@shared/schema";
+import { z } from "zod";
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  
+  // Search endpoint that proxies to Deepseek API
+  app.post("/api/search", async (req, res) => {
+    try {
+      // Validate request body
+      const { query } = searchRequestSchema.parse(req.body);
+      
+      // Get API key from environment variables
+      const apiKey = process.env.DEEPSEEK_API_KEY || process.env.API_KEY || "";
+      
+      if (!apiKey) {
+        return res.status(500).json({ 
+          message: "API key not configured. Please set DEEPSEEK_API_KEY in environment variables." 
+        });
+      }
+
+      // Construct prompt for Deepseek API to get structured response
+      const prompt = `Please provide a comprehensive answer to the following question and suggest related questions that people might also ask. Format your response as JSON with the following structure:
+
+{
+  "direct_answer": "Your detailed answer here",
+  "people_also_ask": ["Related question 1", "Related question 2", "Related question 3", "Related question 4", "Related question 5"]
+}
+
+Question: ${query}
+
+Please ensure the direct_answer is comprehensive and informative, and the people_also_ask contains 5 relevant follow-up questions.`;
+
+      // Make request to Deepseek API
+      const deepseekResponse = await fetch("https://api.deepseek.com/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: "deepseek-chat",
+          messages: [
+            {
+              role: "user",
+              content: prompt
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 1000
+        })
+      });
+
+      if (!deepseekResponse.ok) {
+        const errorText = await deepseekResponse.text();
+        console.error("Deepseek API error:", errorText);
+        throw new Error(`Deepseek API error: ${deepseekResponse.status} ${deepseekResponse.statusText}`);
+      }
+
+      const deepseekData = await deepseekResponse.json();
+      
+      // Extract content from Deepseek response
+      const content = deepseekData.choices?.[0]?.message?.content;
+      if (!content) {
+        throw new Error("No content received from Deepseek API");
+      }
+
+      // Parse JSON response from AI
+      let parsedResponse: SearchResponse;
+      try {
+        // Try to extract JSON from the response
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          parsedResponse = JSON.parse(jsonMatch[0]);
+        } else {
+          // Fallback if JSON parsing fails
+          parsedResponse = {
+            direct_answer: content,
+            people_also_ask: [
+              "What are the key benefits of this topic?",
+              "How does this compare to alternatives?",
+              "What are the potential drawbacks?",
+              "What should beginners know about this?",
+              "What are the future trends in this area?"
+            ]
+          };
+        }
+      } catch (parseError) {
+        console.error("Failed to parse AI response:", parseError);
+        // Fallback response
+        parsedResponse = {
+          direct_answer: content,
+          people_also_ask: [
+            "What are the key benefits of this topic?",
+            "How does this compare to alternatives?",
+            "What are the potential drawbacks?",
+            "What should beginners know about this?",
+            "What are the future trends in this area?"
+          ]
+        };
+      }
+
+      // Ensure response has the correct structure
+      if (!parsedResponse.direct_answer) {
+        parsedResponse.direct_answer = content;
+      }
+      if (!Array.isArray(parsedResponse.people_also_ask)) {
+        parsedResponse.people_also_ask = [
+          "What are the key benefits of this topic?",
+          "How does this compare to alternatives?",
+          "What are the potential drawbacks?",
+          "What should beginners know about this?",
+          "What are the future trends in this area?"
+        ];
+      }
+
+      res.json(parsedResponse);
+
+    } catch (error) {
+      console.error("Search API error:", error);
+      res.status(500).json({ 
+        message: error instanceof Error ? error.message : "An error occurred while processing your search request."
+      });
+    }
+  });
+
+  const httpServer = createServer(app);
+  return httpServer;
+}
