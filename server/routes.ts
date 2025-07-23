@@ -5,7 +5,7 @@ import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
-  // Search endpoint that proxies to Deepseek API
+  // Search endpoint that proxies to OpenRouter API (using DeepSeek model)
   app.post("/api/search", async (req, res) => {
     try {
       // Validate request body
@@ -32,15 +32,17 @@ Question: ${query}
 
 Please ensure the direct_answer is comprehensive and informative, and the people_also_ask contains 5 relevant follow-up questions.`;
 
-      // Make request to Deepseek API
-      const deepseekResponse = await fetch("https://api.deepseek.com/chat/completions", {
+      // Make request to OpenRouter API (which routes to DeepSeek)
+      const deepseekResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`
+          "Authorization": `Bearer ${apiKey}`,
+          "HTTP-Referer": "https://ai-search-assistant.replit.app",
+          "X-Title": "AI Search Assistant",
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          model: "deepseek-chat",
+          model: "deepseek/deepseek-r1-0528:free",
           messages: [
             {
               role: "user",
@@ -54,16 +56,16 @@ Please ensure the direct_answer is comprehensive and informative, and the people
 
       if (!deepseekResponse.ok) {
         const errorText = await deepseekResponse.text();
-        console.error("Deepseek API error:", errorText);
-        throw new Error(`Deepseek API error: ${deepseekResponse.status} ${deepseekResponse.statusText}`);
+        console.error("OpenRouter API error:", errorText);
+        throw new Error(`OpenRouter API error: ${deepseekResponse.status} ${deepseekResponse.statusText}`);
       }
 
       const deepseekData = await deepseekResponse.json();
       
-      // Extract content from Deepseek response
+      // Extract content from OpenRouter response
       const content = deepseekData.choices?.[0]?.message?.content;
       if (!content) {
-        throw new Error("No content received from Deepseek API");
+        throw new Error("No content received from OpenRouter API");
       }
 
       // Parse JSON response from AI
