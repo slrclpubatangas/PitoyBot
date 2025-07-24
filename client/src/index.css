@@ -91,3 +91,146 @@
 .animate-spin-slow {
   animation: spin 1s linear infinite;
 }
+
+/* AI-themed loading spinner animations */
+@keyframes aiPulse {
+  0%, 100% { 
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  50% { 
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes aiOrbit {
+  0% { 
+    transform: rotate(0deg) translateX(25px) rotate(0deg);
+  }
+  100% { 
+    transform: rotate(360deg) translateX(25px) rotate(-360deg);
+  }
+}
+
+@keyframes aiGlow {
+  0%, 100% {
+    box-shadow: 0 0 10px var(--primary-blue), 0 0 20px var(--primary-blue), 0 0 30px var(--primary-blue);
+  }
+  50% {
+    box-shadow: 0 0 20px var(--primary-blue), 0 0 30px var(--primary-blue), 0 0 40px var(--primary-blue);
+  }
+}
+
+@keyframes aiFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes aiScan {
+  0% { transform: scaleX(0); opacity: 0; }
+  50% { transform: scaleX(1); opacity: 1; }
+  100% { transform: scaleX(0); opacity: 0; }
+}
+
+/* AI Loading Spinner Styles */
+.ai-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.ai-brain {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, var(--primary-blue), #6366f1);
+  border-radius: 50%;
+  position: relative;
+  animation: aiPulse 2s ease-in-out infinite, aiFloat 3s ease-in-out infinite;
+}
+
+.ai-brain::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 30px;
+  height: 30px;
+  background: white;
+  border-radius: 50%;
+  opacity: 0.9;
+}
+
+.ai-brain::after {
+  content: '🧠';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 24px;
+  z-index: 2;
+}
+
+.ai-orbits {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.ai-orbit {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: var(--primary-blue);
+  border-radius: 50%;
+  animation: aiOrbit 3s linear infinite, aiGlow 2s ease-in-out infinite;
+}
+
+.ai-orbit:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.ai-orbit:nth-child(2) {
+  animation-delay: -1s;
+  animation-duration: 4s;
+}
+
+.ai-orbit:nth-child(3) {
+  animation-delay: -2s;
+  animation-duration: 2.5s;
+}
+
+.ai-thinking-dots {
+  display: flex;
+  gap: 4px;
+  margin-top: 16px;
+}
+
+.ai-thinking-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--primary-blue);
+  border-radius: 50%;
+  animation: aiPulse 1.5s ease-in-out infinite;
+}
+
+.ai-thinking-dot:nth-child(1) { animation-delay: 0s; }
+.ai-thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+.ai-thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+
+.ai-scan-line {
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--primary-blue), transparent);
+  animation: aiScan 2s ease-in-out infinite;
+}

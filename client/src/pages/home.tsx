@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Search, Lightbulb, Users, Brain, Shield, FileText, HelpCircle, TriangleAlert, RotateCcw, ChevronDown, ChevronUp } from "lucide-react";
 import type { SearchRequest, SearchResponse } from "@shared/schema";
+import AILoadingSpinner from "@/components/AILoadingSpinner";
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -127,8 +128,8 @@ export default function Home() {
                 >
                   {searchMutation.isPending ? (
                     <span className="flex items-center justify-center">
-                      <div className="animate-spin-slow mr-3">
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
+                      <div className="animate-spin mr-3">
+                        <Brain className="w-5 h-5" />
                       </div>
                       Searching...
                     </span>
@@ -147,17 +148,13 @@ export default function Home() {
           {searchMutation.isPending && (
             <div className="animate-fade-in">
               <Card className="rounded-2xl text-center shadow-2xl" style={{ backgroundColor: "var(--dark-surface)" }}>
-                <CardContent className="p-8">
-                  <div className="flex items-center justify-center mb-4">
-                    <div className="animate-spin-slow">
-                      <div className="w-12 h-12 border-4 border-t-transparent rounded-full" style={{ borderColor: "var(--primary-blue)", borderTopColor: "transparent" }} />
-                    </div>
-                  </div>
-                  <p className="text-lg" style={{ color: "var(--text-secondary)" }}>Searching for answers...</p>
-                  <div className="mt-4 flex justify-center space-x-1">
-                    <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: "var(--primary-blue)" }} />
-                    <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: "var(--primary-blue)", animationDelay: "0.2s" }} />
-                    <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: "var(--primary-blue)", animationDelay: "0.4s" }} />
+                <CardContent className="p-12">
+                  <AILoadingSpinner 
+                    message="Analyzing your question and searching for the best answer..."
+                    size="large"
+                  />
+                  <div className="mt-6 text-sm" style={{ color: "var(--text-secondary)" }}>
+                    <p>🤖 Processing with AI • 🔍 Finding relevant information • ⚡ Generating insights</p>
                   </div>
                 </CardContent>
               </Card>
