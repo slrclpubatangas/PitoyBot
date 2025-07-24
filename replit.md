@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is a full-stack AI Search Assistant web application built with Node.js/Express backend and React frontend. The application allows users to submit search queries that are processed through the Deepseek AI API, returning structured responses with direct answers and related follow-up questions.
+This is a full-stack AI Search Assistant web application built with Node.js/Express backend and React frontend. The application allows users to submit search queries that are processed through the OpenRouter API (using DeepSeek models), returning structured responses with clean direct answers and expandable "People Also Ask" questions with their answers.
 
 ## User Preferences
 

@@ -120,16 +120,39 @@ Important: The direct_answer should contain ONLY the factual response to the que
         console.error("Failed to parse AI response:", parseError);
         
         // Try to extract direct answer from plain text if JSON parsing fails
-        let directAnswer = content
+        let directAnswer = content;
+        
+        // Extract just the direct answer portion before any related questions
+        const answerEndPatterns = [
+          /",\s*".*?":\s*\[/,  // Look for the end of direct_answer field
+          /\.",\s*\[/,         // Look for period followed by array
+          /\.",\s*{/,          // Look for period followed by object
+          /"\s*,\s*"[^"]*question/i  // Look for transition to questions
+        ];
+        
+        for (const pattern of answerEndPatterns) {
+          const match = directAnswer.match(pattern);
+          if (match) {
+            directAnswer = directAnswer.substring(0, match.index! + 1);
+            break;
+          }
+        }
+        
+        // Clean up the extracted answer
+        directAnswer = directAnswer
           .replace(/```json/gi, '')
           .replace(/```/g, '')
-          .replace(/\{.*?"direct_answer":\s*"/i, '')
-          .replace(/".*?\[.*?\].*?\}/s, '')
+          .replace(/^\s*{\s*"direct_answer":\s*"/i, '')
+          .replace(/"\s*,?\s*$/, '')
           .replace(/^[\s\n"']+|[\s\n"']+$/g, '')
           .trim();
         
         if (!directAnswer || directAnswer.length < 10) {
-          directAnswer = content;
+          directAnswer = content
+            .replace(/```json/gi, '')
+            .replace(/```/g, '')
+            .split(/(?:people.?also.?ask|related.?question)/i)[0]
+            .trim();
         }
         
         // Fallback response with extracted or original content
@@ -165,8 +188,27 @@ Important: The direct_answer should contain ONLY the factual response to the que
         parsedResponse.direct_answer = content;
       }
       
-      // Clean up the direct answer to remove unwanted terms and formatting
-      parsedResponse.direct_answer = parsedResponse.direct_answer
+      // Clean up the direct answer to remove unwanted terms, formatting, and related questions
+      let cleanAnswer = parsedResponse.direct_answer;
+      
+      // Remove any content that appears to be related questions/answers that leaked into direct_answer
+      const questionPatterns = [
+        /",\s*".*?":\s*\[.*/s,           // Remove from ", followed by array
+        /\.",\s*\[.*/s,                  // Remove from .", followed by array  
+        /"\s*,\s*\{.*/s,                 // Remove from ", followed by object
+        /"\s*,\s*"[^"]*question.*/is,    // Remove from transition to questions
+        /"\s*,\s*"[^"]*when.*/is,        // Remove common question starters
+        /"\s*,\s*"[^"]*what.*/is,
+        /"\s*,\s*"[^"]*how.*/is,
+        /"\s*,\s*"[^"]*why.*/is
+      ];
+      
+      for (const pattern of questionPatterns) {
+        cleanAnswer = cleanAnswer.replace(pattern, '');
+      }
+      
+      // Clean up general formatting and unwanted terms
+      cleanAnswer = cleanAnswer
         .replace(/```json/gi, '')
         .replace(/```/g, '')
         .replace(/^[\s\n]*{[\s\n]*"direct_answer":\s*"/i, '')
@@ -174,7 +216,10 @@ Important: The direct_answer should contain ONLY the factual response to the que
         .replace(/(?:json|direct.?answer|people.?also.?ask)/gi, '')
         .replace(/^\s*["']/g, '')
         .replace(/["']\s*$/g, '')
+        .replace(/"\s*,?\s*$/, '')
         .trim();
+      
+      parsedResponse.direct_answer = cleanAnswer;
       
       if (!Array.isArray(parsedResponse.people_also_ask)) {
         parsedResponse.people_also_ask = [
