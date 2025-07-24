@@ -315,7 +315,7 @@ export default function Home() {
           
           <div className="mt-6 pt-4 border-t border-gray-800 text-center">
             <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-              © 2024 PitoyBot. Created by Kent Villar and team using Node.js, Express, and modern web technologies.
+              © 2024 PitoyBot. Created by Kent Villar using Node.js, Express, and modern web technologies.
             </p>
           </div>
         </div>
