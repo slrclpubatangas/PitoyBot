@@ -71,11 +71,8 @@ export default function Home() {
       <header className="py-8 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <div className="flex items-center justify-center mb-4">
-            <div className="p-3 rounded-xl mr-4" style={{ backgroundColor: "var(--primary-blue)" }}>
-              <Search className="text-2xl text-white w-8 h-8" />
-            </div>
             <h1 className="text-4xl font-bold" style={{ color: "var(--text-primary)" }}>
-              PitoyBot
+              🍆 PitoyBot
             </h1>
           </div>
           <p className="text-lg" style={{ color: "var(--text-secondary)" }}>
