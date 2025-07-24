@@ -21,37 +21,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Construct prompt for OpenRouter API to get structured response
-      const prompt = `Please provide a comprehensive answer to the following question and suggest related questions with their answers. Format your response as JSON with the following structure:
+      const prompt = `You are a helpful assistant that provides accurate information. Answer the user's question and provide related questions with answers.
 
+User question: ${query}
+
+Respond with ONLY a valid JSON object in this exact format:
 {
-  "direct_answer": "Your detailed answer here",
+  "direct_answer": "Write a clear, comprehensive answer to the user's question. Do not mention JSON, formatting, or structural terms. Provide only the factual response.",
   "people_also_ask": [
     {
-      "question": "Related question 1",
-      "answer": "Brief answer to question 1"
+      "question": "A relevant follow-up question",
+      "answer": "A concise answer to that question"
     },
     {
-      "question": "Related question 2", 
-      "answer": "Brief answer to question 2"
+      "question": "Another related question",
+      "answer": "A brief but informative answer"
     },
     {
-      "question": "Related question 3",
-      "answer": "Brief answer to question 3"
+      "question": "Third related question",
+      "answer": "Clear answer"
     },
     {
-      "question": "Related question 4",
-      "answer": "Brief answer to question 4"
+      "question": "Fourth related question", 
+      "answer": "Direct answer"
     },
     {
-      "question": "Related question 5",
-      "answer": "Brief answer to question 5"
+      "question": "Fifth related question",
+      "answer": "Helpful response"
     }
   ]
 }
 
-Question: ${query}
-
-Please ensure the direct_answer is comprehensive and informative, and each item in people_also_ask contains a relevant follow-up question with a concise but informative answer.`;
+Important: The direct_answer should contain ONLY the factual response to the question, without any references to JSON, formatting, or meta-language. Write naturally as if speaking directly to the user.`;
 
       // Make request to OpenRouter API (which routes to DeepSeek)
       const deepseekResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -92,43 +93,48 @@ Please ensure the direct_answer is comprehensive and informative, and each item 
       // Parse JSON response from AI
       let parsedResponse: SearchResponse;
       try {
-        // Try to extract JSON from the response
+        // Try to extract and clean JSON from the response
+        let jsonText = content;
+        
+        // First try to find JSON object in the response
         const jsonMatch = content.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
-          parsedResponse = JSON.parse(jsonMatch[0]);
-        } else {
-          // Fallback if JSON parsing fails
-          parsedResponse = {
-            direct_answer: content,
-            people_also_ask: [
-              {
-                question: "What are the key benefits of this topic?",
-                answer: "This topic offers several advantages that can be beneficial in various contexts."
-              },
-              {
-                question: "How does this compare to alternatives?",
-                answer: "Each approach has its own strengths and considerations to evaluate."
-              },
-              {
-                question: "What are the potential drawbacks?",
-                answer: "Like any topic, there are some limitations and challenges to be aware of."
-              },
-              {
-                question: "What should beginners know about this?",
-                answer: "Starting with the fundamentals and basic concepts is usually the best approach."
-              },
-              {
-                question: "What are the future trends in this area?",
-                answer: "This field continues to evolve with new developments and innovations."
-              }
-            ]
-          };
+          jsonText = jsonMatch[0];
         }
+        
+        // Clean up common JSON formatting issues
+        jsonText = jsonText
+          .replace(/```json/gi, '')
+          .replace(/```/g, '')
+          .replace(/,(\s*[}\]])/g, '$1') // Remove trailing commas
+          .trim();
+        
+        parsedResponse = JSON.parse(jsonText);
+        
+        // Validate that we have the expected structure
+        if (!parsedResponse.direct_answer || !Array.isArray(parsedResponse.people_also_ask)) {
+          throw new Error("Invalid response structure");
+        }
+        
       } catch (parseError) {
         console.error("Failed to parse AI response:", parseError);
-        // Fallback response
+        
+        // Try to extract direct answer from plain text if JSON parsing fails
+        let directAnswer = content
+          .replace(/```json/gi, '')
+          .replace(/```/g, '')
+          .replace(/\{.*?"direct_answer":\s*"/i, '')
+          .replace(/".*?\[.*?\].*?\}/s, '')
+          .replace(/^[\s\n"']+|[\s\n"']+$/g, '')
+          .trim();
+        
+        if (!directAnswer || directAnswer.length < 10) {
+          directAnswer = content;
+        }
+        
+        // Fallback response with extracted or original content
         parsedResponse = {
-          direct_answer: content,
+          direct_answer: directAnswer,
           people_also_ask: [
             {
               question: "What are the key benefits of this topic?",
@@ -154,10 +160,22 @@ Please ensure the direct_answer is comprehensive and informative, and each item 
         };
       }
 
-      // Ensure response has the correct structure
+      // Ensure response has the correct structure and clean up the direct answer
       if (!parsedResponse.direct_answer) {
         parsedResponse.direct_answer = content;
       }
+      
+      // Clean up the direct answer to remove unwanted terms and formatting
+      parsedResponse.direct_answer = parsedResponse.direct_answer
+        .replace(/```json/gi, '')
+        .replace(/```/g, '')
+        .replace(/^[\s\n]*{[\s\n]*"direct_answer":\s*"/i, '')
+        .replace(/"[\s\n]*}[\s\n]*$/i, '')
+        .replace(/(?:json|direct.?answer|people.?also.?ask)/gi, '')
+        .replace(/^\s*["']/g, '')
+        .replace(/["']\s*$/g, '')
+        .trim();
+      
       if (!Array.isArray(parsedResponse.people_also_ask)) {
         parsedResponse.people_also_ask = [
           {
