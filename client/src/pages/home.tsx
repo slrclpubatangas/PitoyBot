@@ -72,7 +72,7 @@ export default function Home() {
         <div className="max-w-4xl mx-auto text-center">
           <div className="flex items-center justify-center mb-4">
             <h1 className="text-4xl font-bold" style={{ color: "var(--text-primary)" }}>
-              🍆 PitoyBot
+              🍆 SmartBoy
             </h1>
           </div>
           <p className="text-lg" style={{ color: "var(--text-secondary)" }}>
@@ -315,7 +315,7 @@ export default function Home() {
           
           <div className="mt-6 pt-4 border-t border-gray-800 text-center">
             <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-              © 2025 PitoyBot. Created by Kent Villar using Node.js, Express, and modern web technologies.
+              © 2025 SmartBoy. Created by Kent Villar using Node.js, Express, and modern web technologies.
             </p>
           </div>
         </div>
